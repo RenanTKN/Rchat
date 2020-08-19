@@ -2,7 +2,7 @@ import {
   HubConnection,
   HubConnectionBuilder,
   HubConnectionState,
-} from "@aspnet/signalr";
+} from "@microsoft/signalr";
 
 class SignalR {
   connection: HubConnection | undefined;
@@ -11,6 +11,7 @@ class SignalR {
     // TODO change the path to env var
     const connection = new HubConnectionBuilder()
       .withUrl("http://localhost:5000/chat")
+      .withAutomaticReconnect()
       .build();
 
     this.connection = connection;
@@ -35,8 +36,7 @@ class SignalR {
     try {
       if (this.connected()) {
         this.connection?.invoke(action, data).catch((e) => console.error(e));
-      }
-      else {
+      } else {
         console.log(`SignalR not connected`);
       }
     } catch (e) {

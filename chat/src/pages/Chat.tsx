@@ -8,6 +8,7 @@ import signal from "../services/signalR";
 import { receiveMessageType, loggedInType } from "../types";
 import AppBar from "../components/AppBarMenu";
 import ChatContainer from "../components/ChatContainer";
+import DialogConnection from "../components/DialogConnection";
 
 const useStyles = makeStyles({
   container: {
@@ -19,10 +20,24 @@ const Chat = (): JSX.Element => {
   const classes = useStyles();
   const dispatch = useDispatch();
   const [open, setOpen] = useState<boolean>(true);
+  const [reconnecting, setReconnecting] = useState<boolean>(false);
   const username = useSelector((state) => getUsername(state));
 
   useEffect(() => {
     signal.connect();
+
+    signal.connection?.onreconnecting((error) => {
+      setReconnecting(true);
+      console.log(`Connection lost due to error "${error}". Reconnecting.`);
+    });
+
+    signal.connection?.onreconnected((connectionId) => {
+      setReconnecting(false);
+      console.log(
+        `Connection reestablished. Connected with connectionId "${connectionId}".`
+      );
+    });
+
     signal.connection?.on("sendToAll", (message: receiveMessageType) => {
       dispatch(sendMessage(message));
     });
@@ -49,6 +64,7 @@ const Chat = (): JSX.Element => {
       </div>
 
       <RegisterModal open={open} handleClose={handleClose} />
+      <DialogConnection open={reconnecting} />
     </>
   );
 };
